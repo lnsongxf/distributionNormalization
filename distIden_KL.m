@@ -1,73 +1,64 @@
 %Consider workers (1 to 15000) and firm IDs between 1 and 15000 of which 10k in each
 %period
-
+clear
 
 %Consider RP (Real Production) defined on RX and RY 
 rAlpha = 0.3;
-RP = @(rx,ry)  rx^(rAlpha).*ry^(1 - rAlpha);
+RP = @(rx,ry)  0.5 + rx^(rAlpha).*ry^(1 - rAlpha);
 
-nxy             = 10000;
+%Consider population of 50000 workers
+%30000 are in each one to match benchmark model
+%There is a small issue with mixing workers and firms. Need to move
+%carefully in understanding how selection affects the binning. Might need a
+%theorem or two on continuity for indentification
+nx              = 50000;
+firmSize        = 100;
+ny              = nx/firmSize;
 rxmin           = 0;
 rxmax           = 1;
 rymin           = 0;
 rymax           = 1;
-adoptionProb    = 0.7;
+wAdoptionNum    = 30000;
+fAdoptionNum    = wAdoptionNum/firmSize;
 distCenter1     = [2,5];
 distCenter2     = [5,2];
 numBins         = 50;
+workersPerBin   = wAdoptionNum/numBins;
+firmsPerBin     = fAdoptionNum/numBins;
 
 %Distributions of the true underlying ability which is coming from some
 %arbitrary distribution bound on [rxmin,rxmax] and [rymin,rymax]
-workerDist = sort(rand(nxy,1)*(rxmax - rxmin) + rxmin);
-firmDist   = sort(rand(nxy,1)*(rymax - rymin) + rymin);
+workerDist = sort(rand(nx,1)*(rxmax - rxmin) + rxmin);
+firmDist   = sort(rand(ny,1)*(rymax - rymin) + rymin);
 
 %Draw massPerPeriod workers and firms for each period such that there is a
 %shift in the ability
-adoptionProb1   = betapdf(linspace(0,1,nxy),distCenter1(1),distCenter1(2))';
-adoptionProb2   = betapdf(linspace(0,1,nxy),distCenter2(1),distCenter2(2))';
+adoptionProbW1   = betapdf(linspace(0,1,nx),distCenter1(1),distCenter1(2))';
+adoptionProbF1   = betapdf(linspace(0,1,ny),distCenter1(1),distCenter1(2))';
+adoptionProbW2   = betapdf(linspace(0,1,nx),distCenter2(1),distCenter2(2))';
+adoptionProbF2   = betapdf(linspace(0,1,ny),distCenter2(1),distCenter2(2))';
 
-W1              = sampleCDF(adoptionProb1,adoptionProb*nxy);
-wDist1          = workerDist(W1);
-W2              = sampleCDF(adoptionProb2,adoptionProb*nxy);
-wDist2          = workerDist(W2);
-F1              = sampleCDF(adoptionProb1,adoptionProb*nxy);
-fDist1          = firmDist(F1);
-F2              = sampleCDF(adoptionProb2,adoptionProb*nxy);
-fDist2          = firmDist(F2);
+wDist1          = workerDist(sampleCDF(adoptionProbW1,wAdoptionNum));
+wDist2          = workerDist(sampleCDF(adoptionProbW2,wAdoptionNum));
+fDist1          = firmDist(sampleCDF(adoptionProbF1,fAdoptionNum));
+fDist2          = firmDist(sampleCDF(adoptionProbF2,fAdoptionNum));
 
-%Now, construct the production function based on the ranks of these
-%workers. 
-%Production function and hence worker wages are constructed at the
-%individual level.
-%Firms can be aggregates of jobs later on.
-indProd1 = zeros(numel(wDist1),numel(fDist1));
-indProd2 = zeros(numel(wDist2),numel(fDist2));
-for i1 = 1:numel(wDist1)
-  for i2 = 1:numel(fDist1)
-    indProd1(i1,i2)        = RP(wDist1(i1),fDist1(i2));
-    indProd2(i1,i2)        = RP(wDist2(i1),fDist2(i2));
+%Just start with a case where production function is just the appropriate
+%average
+indProd1 = zeros(numBins,numBins);
+indProd2 = zeros(numBins,numBins);
+for i1 = 1:numBins
+  ind1 = (i1-1)*workersPerBin + 1 : i1*workersPerBin;
+  for i2 = 1:numBins
+    ind2 = (i2-1)*firmsPerBin + 1 : i2*firmsPerBin;
+    ind2 = vec(repmat(ind2,workersPerBin/firmsPerBin,1))';
+    indProd1(i1,i2)        = mean(arrayfun(RP,wDist1(ind1),fDist1(ind2)));
+    indProd2(i1,i2)        = mean(arrayfun(RP,wDist2(ind1),fDist2(ind2)));
   end
 end
 
-%Now construct the production function as averages of cells of firms of
-%size 100
-
-
 % This replication was performed on MATLAB R2012a
 % This needs to be run from the \CODE folder
-clear
 addpath Source
-HLM('ojs')
-
-mkdir('Output\benchmark');
-!move Output\benchmark* Output\benchmark\.
-compileData('Output\benchmark')
-
-makeProdError
-benchmarkFigures
-ojsFigures
-matchqualityFigures
-highbetaFigures
-shortsampleFigures
-smallfirmsFigures
-plotDataFromIAB
+HLM('customProd',indProd1)
+HLM('customProd',indProd2)
