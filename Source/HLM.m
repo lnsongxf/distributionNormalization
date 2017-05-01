@@ -23,13 +23,13 @@ function [S,C,P,M,Sim,RD,SimO] = HLM(Scheme,customProd)
   %% COMPUTATION PARAMETERS
   V.HomeProd              = [0];        %Home production for worker.
   V.VacCost               = [0];        %Vacancy costs (For cost of 1 per period, put 1 and not -1).
-  V.Kkappa                = [0.4;0.7];  %Matching function parameter, refer to above.
+  V.Kkappa                = [0.4];  %Matching function parameter, refer to above.
   V.NnuS                  = [0.5];      %Matching function parameter, refer to above.
   V.NnuV                  = [0.5];      %Matching function parameter, refer to above.
   V.Aalpha                = [0.5];      %Worker share of surplus.
-  V.Ddelta                = [0.01;0.025];     %Exogenous destruction rate.
-  V.DistX                 = [1;2;3];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
-  V.DistY                 = [1;2;3];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
+  V.Ddelta                = [0.01];     %Exogenous destruction rate.
+  V.DistX                 = [1];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
+  V.DistY                 = [1];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
   V.Pf                    = 1;                %Relative size of firms to workers.
   V.ProdFn.pam            = '@(x,y) 0.6 + 0.4* (x^0.5 + y^0.5)^(2)';
   V.ProdFn.nam            = '@(x,y) (x^2 + 2*y^2)^(1/2)';
@@ -37,8 +37,6 @@ function [S,C,P,M,Sim,RD,SimO] = HLM(Scheme,customProd)
   V.ProdFn.customProd     = @(x,y) customProd(x,y);
   
   switch S.Scheme
-    case {'test'}
-      
     case {'benchmark'}
       C.NumAgentsSimMult      = 600;  %Number of agents per type for simulation.
       C.Years                 = 20;   %Years in simulation.
