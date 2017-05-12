@@ -1,6 +1,9 @@
 clear
 addpath Source
 
+%Labels for worker and firm original names.
+
+
 %Consider RP (Real Production) defined on RX and RY 
 %This is the TRUE output which doesn't change over time.
 rAlpha = 0.3;
@@ -26,8 +29,8 @@ firmsPerBin     = fAdoptionNum/numBins;
 workerDist = sort(rand(nx,1));
 firmDist   = sort(rand(ny,1));
 %Parameterize the beta distribution
-distCenter1     = [2,5];
-distCenter2     = [5,2];
+distCenter1     = [1,1];
+distCenter2     = [1,1];
 
 
 %Draw massPerPeriod workers and firms for each period such that there is a
@@ -40,10 +43,14 @@ adoptionProbF2   = betapdf(linspace(0,1,ny),distCenter2(1),distCenter2(2))';
 
 %Sample the workers and firms in both periods. These become the workers and
 %firms who are actually floating around in each period.
-wDist1          = workerDist(sampleCDF(adoptionProbW1,wAdoptionNum));
-wDist2          = workerDist(sampleCDF(adoptionProbW2,wAdoptionNum));
-fDist1          = firmDist(sampleCDF(adoptionProbF1,fAdoptionNum));
-fDist2          = firmDist(sampleCDF(adoptionProbF2,fAdoptionNum));
+wName1          = find(sampleCDF(adoptionProbW1,wAdoptionNum));
+wDist1          = workerDist(wName1);
+wName2          = find(sampleCDF(adoptionProbW2,wAdoptionNum));
+wDist2          = workerDist(wName2);
+fName1          = find(sampleCDF(adoptionProbF1,fAdoptionNum));
+fDist1          = firmDist(fName1);
+fName2          = find(sampleCDF(adoptionProbF2,fAdoptionNum));
+fDist2          = firmDist(fName2);
 
 %Remember the bins stuff? We have 50 bins, but workers are from a
 %continuous distribution. The averaging here screws things up a bit and
@@ -66,6 +73,8 @@ for i1 = 1:numBins
   end
 end
 
+save
+
 % This replication was performed on MATLAB R2012a
 % This needs to be run from the \CODE folder
 HLM('customProd',indProd1)
@@ -74,5 +83,34 @@ HLM('customProd',indProd2)
 %Each of them plus stuff here will contain all the information we need to
 %do our thing.
 
+clear
+load
+load Output\customProd_customProd_000001_170512163349.mat
+wTrueRank1    = RD.I.iNRRankAgg(:,1);
+wEstRank1     = RD.I.iNRRankAgg(:,2);
+wTrueBin1     = SimO.iNameX(wTrueRank1);
+wEstBin1      = RD.I.iBin;
+fTrueRank1    = vec(1:300);
+fEstRank1     = RD.J.NROmega(:,2);
+fTrueBin1     = ceil(vec(1:300)/6);
+fEstBin1      = RD.J.jBin;
+EconomyW1     = table(wName1,wTrueRank1,wEstRank1,wTrueBin1,wEstBin1);
+EconomyF1     = table(fName1,fTrueRank1,fEstRank1,fTrueBin1,fEstBin1);
+writetable(EconomyW1,'EconomyW1.csv')
+writetable(EconomyF1,'EconomyF1.csv')
 
-
+clear
+load
+load Output\customProd_customProd_000001_170512163843.mat
+wTrueRank2    = RD.I.iNRRankAgg(:,1);
+wEstRank2     = RD.I.iNRRankAgg(:,2);
+wTrueBin2     = SimO.iNameX(wTrueRank2);
+wEstBin2      = RD.I.iBin;
+fTrueRank2    = vec(1:300);
+fEstRank2     = RD.J.NROmega(:,2);
+fTrueBin2     = ceil(vec(1:300)/6);
+fEstBin2      = RD.J.jBin;
+EconomyW2     = table(wName2,wTrueRank2,wEstRank2,wTrueBin2,wEstBin2);
+EconomyF2     = table(fName2,fTrueRank2,fEstRank2,fTrueBin2,fEstBin2);
+writetable(EconomyW2,'EconomyW2.csv')
+writetable(EconomyF2,'EconomyF2.csv')
