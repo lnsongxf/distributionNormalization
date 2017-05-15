@@ -115,7 +115,7 @@ function [S] = GenParMixAndDelegate(V,S)
   %Generate the permutations of V
   V = rmfield(V,{'ProdFn'});
   S.Mix = mixgenAM(V);
-  S.Sets = 1 : size(S.Mix,1);
+%   S.Sets = 1 : size(S.Mix,1);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 function Mix = mixgenAM(Y)

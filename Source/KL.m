@@ -1,4 +1,4 @@
-function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn)  
+function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)  
   %% HOUSEKEEPING
   format short; 
   
@@ -6,6 +6,7 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn)
   S.Scheme                = Scheme; %Name this specification.
   S.IterInfoDisp          = 100; %How often to display status.
   S.addn                  = addn;  %Identifier for file
+  S.Sets                  = iSet;
   
   %These paremeters are for troubleshooting.
   C.PerfectiRank          = 0; %1 assigns perfect ranking. %2 uses ExpW
@@ -24,11 +25,11 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn)
   %% COMPUTATION PARAMETERS
   V.HomeProd              = [0];        %Home production for worker.
   V.VacCost               = [0];        %Vacancy costs (For cost of 1 per period, put 1 and not -1).
-  V.Kkappa                = [0.4];  %Matching function parameter, refer to above.
+  V.Kkappa                = [0.4;0.7];  %Matching function parameter, refer to above.
   V.NnuS                  = [0.5];      %Matching function parameter, refer to above.
   V.NnuV                  = [0.5];      %Matching function parameter, refer to above.
   V.Aalpha                = [0.5];      %Worker share of surplus.
-  V.Ddelta                = [0.01];     %Exogenous destruction rate.
+  V.Ddelta                = [0.01;0.02];     %Exogenous destruction rate.
   V.DistX                 = [1];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
   V.DistY                 = [1];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
   V.Pf                    = 1;                %Relative size of firms to workers.
@@ -103,7 +104,7 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn)
       V.Bbeta                 = 0.996; %Time discount factor.
       C.GridZeta              = 0;     %Match Quality Shock Grid
       C.UseVacs               = 0;     %Use vacancy information
-      V.VarDueNoise           = 0.0;   %Wage variance due to measurement error.
+      V.VarDueNoise           = 0.1;   %Wage variance due to measurement error.
       C.DropExt               = 0.1;   %Cutoff for dropping algorithm
     otherwise
       error('Scheme is not defined')
