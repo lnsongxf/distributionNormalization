@@ -1,10 +1,11 @@
-function [S,C,P,M,Sim,RD,SimO] = HLM(Scheme,customProd)  
+function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn)  
   %% HOUSEKEEPING
-  format short; clear mex;
+  format short; 
   
   %% SETUP
   S.Scheme                = Scheme; %Name this specification.
   S.IterInfoDisp          = 100; %How often to display status.
+  S.addn                  = addn;  %Identifier for file
   
   %These paremeters are for troubleshooting.
   C.PerfectiRank          = 0; %1 assigns perfect ranking. %2 uses ExpW
@@ -31,9 +32,6 @@ function [S,C,P,M,Sim,RD,SimO] = HLM(Scheme,customProd)
   V.DistX                 = [1];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
   V.DistY                 = [1];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
   V.Pf                    = 1;                %Relative size of firms to workers.
-  V.ProdFn.pam            = '@(x,y) 0.6 + 0.4* (x^0.5 + y^0.5)^(2)';
-  V.ProdFn.nam            = '@(x,y) (x^2 + 2*y^2)^(1/2)';
-  V.ProdFn.not            = '@(x,y) (0.4 + (x-0.4+1)*y).*double(x<=0.4) + (0.4+((x-0.4)^2+y^2)^(1/2)).*double(x>0.4)';
   V.ProdFn.customProd     = @(x,y) customProd(x,y);
   
   switch S.Scheme
@@ -98,7 +96,7 @@ function [S,C,P,M,Sim,RD,SimO] = HLM(Scheme,customProd)
       V.VarDueNoise           = 0.2;   %Wage variance due to measurement error.
       C.DropExt               = 0.1;   %Cutoff for dropping algorithm
     case {'customProd'}
-      C.NumAgentsSimMult      = 600;   %Number of agents per type for simulation.
+      C.NumAgentsSimMult      = econSize/50;   %Number of agents per type for simulation.
       C.Years                 = 20;    %Years in simulation.
       C.jSizeDist             = 100;   %Total number of vacancies for each firm.
       V.Pphi                  = 0.2;   %OJS parameter
@@ -115,7 +113,7 @@ function [S,C,P,M,Sim,RD,SimO] = HLM(Scheme,customProd)
   C.LenGrid               = 50;   %Number of grid points to discretize productivity.
   C.Nodes                 = 3000; %Number of nodes for the LAP problem.
   C.Std2Truncate          = 3;    %Standard deviations to truncate from noise.
-  C.TolExit               = 5e-7;  %Exit tolerance.
+  C.TolExit               = 1e-6;  %Exit tolerance.
   C.OMPTHREADS            = 1; %Number of OMPTHREADS to use in ranking workers.
   C.NITERMAX              = 100; %Number of iterations to run ranking algorithm
   C.MCutOff               = 3; %Mi >= C.MCutOff is not used for min wage, but used for acc prob

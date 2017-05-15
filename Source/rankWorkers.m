@@ -42,56 +42,56 @@ function [I] = rankW(I,C,LU,varW,M,P,SimO)
   
   %Make a work directory for this parameterization.
   WorkDir = 1;
-  while exist(['Output\',num2str(WorkDir)],'dir') == 7
+  while exist(['Output',filesep,num2str(WorkDir)],'dir') == 7
     %If it exists already, make another.
     WorkDir = WorkDir + 1;
   end
   WorkDir = num2str(WorkDir);
-  mkdir(['Output\',WorkDir])
+  mkdir(['Output',filesep,WorkDir])
   
   Bla  = sortrows(LU.WFCA,[2 1]);
-  fid = fopen(['Output\',WorkDir,'\DontUse.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'DontUse.txt'],'w');
   fprintf(fid,'%i\n', zeros(C.NumAgentsSim,1));
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\OrderFID.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'OrderFID.txt'],'w');
   fprintf(fid,'%i\n', Bla(:,2));
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\OrderWID.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'OrderWID.txt'],'w');
   fprintf(fid,'%i\n', Bla(:,1));
   fclose(fid);
   % Write to file here:
-  fid = fopen(['Output\',WorkDir,'\NITERMAX.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'NITERMAX.txt'],'w');
   fprintf(fid,'%i\n', C.NITERMAX);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\DistMaxInGlo.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'DistMaxInGlo.txt'],'w');
   fprintf(fid,'%i\n', C.DistMaxInGlo);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\OMPTHREADS.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'OMPTHREADS.txt'],'w');
   fprintf(fid,'%i\n', C.OMPTHREADS);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\ProbDistInc.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'ProbDistInc.txt'],'w');
   fprintf(fid,'%20.10f\n', C.ProbDistInc);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\MovesToSave.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'MovesToSave.txt'],'w');
   fprintf(fid,'%i\n', C.MovesToSave);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\DispCheck.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'DispCheck.txt'],'w');
   fprintf(fid,'%i\n', C.DispCheck);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\DispMove.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'DispMove.txt'],'w');
   fprintf(fid,'%i\n', C.DispMove);
   fclose(fid);
   % SizeBI, WAve, WIdxXS,
-  fid = fopen(['Output\',WorkDir,'\NumAgentsSim.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'NumAgentsSim.txt'],'w');
   fprintf(fid,'%i\n', C.NumAgentsSim);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\SizeBI.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'SizeBI.txt'],'w');
   fprintf(fid,'%i\n', size(LU.WFCA,1));
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\VarNoise.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'VarNoise.txt'],'w');
   fprintf(fid,'%20.10f\n', varW);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\NRAgg.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'NRAgg.txt'],'w');
   
   ScoreExp  = computeNaiveScore(I.iNRExpW,LU.iAvWageAtFirm);
   ScoreMin  = computeNaiveScore(I.iNRMin,LU.iAvWageAtFirm);
@@ -118,39 +118,39 @@ function [I] = rankW(I,C,LU,varW,M,P,SimO)
   end
   wIdxS       = [1;wIdxE(1:end-1) + 1];
   
-  fid = fopen(['Output\',WorkDir,'\wIdxS.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'wIdxS.txt'],'w');
   fprintf(fid,'%i\n', wIdxS);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\wIdxE.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'wIdxE.txt'],'w');
   fprintf(fid,'%i\n', wIdxE);
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\eID.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'eID.txt'],'w');
   fprintf(fid,'%i\n', int32(LU.WFCA(:,2)));
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\WAve.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'WAve.txt'],'w');
   fprintf(fid,'%20.12f\n',LU.WFCA(:,4));
   fclose(fid);
-  fid = fopen(['Output\',WorkDir,'\cInv.txt'],'w');
+  fid = fopen(['Output',filesep,WorkDir,filesep,'cInv.txt'],'w');
   fprintf(fid,'%20.12f\n',LU.WFCA(:,3));
   fclose(fid);
   
-  copyfile('Source\EXE\rankAlgo\x64\Release\rankAlgo.exe',['Output\',WorkDir,'\rankAlgo.exe']);
+  copyfile(['Source',filesep,'EXE',filesep,'rankAlgo',filesep,'x64',filesep,'Release',filesep,'rankAlgo.exe'],['Output',filesep,WorkDir,filesep,'rankAlgo.exe']);
   
   pause(2)
-  cd(['Output\',WorkDir]);
+  cd(['Output',filesep,WorkDir]);
   !rankAlgo.exe
   
   iNRRankAgg = load('NRAgg.txt');
   iNRRankAgg(:,2) = SimO.iNames;
   I.iNRRankAgg    = sortrows(iNRRankAgg,1);
   
-  cd ../..
+  cd(['..',filesep,'..'])
   pause(2)
-  eval(['delete Output\',WorkDir,'\*.*']);
+  eval(['delete Output',filesep,WorkDir,'\*.*']);
   pause(1)
-  eval(['delete Output\',WorkDir,'\*.*']);
+  eval(['delete Output',filesep,WorkDir,'\*.*']);
   pause(1)
-  eval(['rmdir Output\',WorkDir]);
+  eval(['rmdir Output',filesep,WorkDir]);
   
   I.ScoreRankAgg  = computeNaiveScore(I.iNRRankAgg,LU.iAvWageAtFirm);
   I.ScoreExp      = ScoreExp;

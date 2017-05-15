@@ -105,9 +105,9 @@ function [RD] = WantedVars(C,M,P,Sim,SimO,S)
   RD.Y                          = evalProdGoodness(Sim,SimO,M,RD,RD.J.jBin(SimO.JobNamej),RD.Y.Prod,C);
   RD.FS                         = finalStats(SimO,C,RD,Sim);
   RD.SP                         = diagonalOutput(M,C,RD,P,SimO);
-  RD.SP                         = socialPlanner(C,M,SimO,RD,S,P,Sim);
+%  RD.SP                         = socialPlanner(C,M,SimO,RD,S,P,Sim);
   
-  RD.AKM                        = getACKM_PCG(Sim,C,SimO);
+%  RD.AKM                        = getACKM_PCG(Sim,C,SimO);
   
 end
 

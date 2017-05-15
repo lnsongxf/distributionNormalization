@@ -78,7 +78,7 @@ function SaveData(S,varargin) %#ok<INUSL,INUSD>
     Str   = [Str,inputname(in),' '];
   end
   eval(['clearvars -except ',Str])
-  eval(strcat('save Output\',P.FName,'.mat -v7.3'))
+  eval(strcat('save Output',filesep,P.FName,S.addn,'.mat -v7.3'))
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 function Warnings(C,S,P)
