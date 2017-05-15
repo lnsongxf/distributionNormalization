@@ -113,7 +113,7 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn)
   C.LenGrid               = 50;   %Number of grid points to discretize productivity.
   C.Nodes                 = 3000; %Number of nodes for the LAP problem.
   C.Std2Truncate          = 3;    %Standard deviations to truncate from noise.
-  C.TolExit               = 1e-6;  %Exit tolerance.
+  C.TolExit               = 5e-6;  %Exit tolerance.
   C.OMPTHREADS            = 1; %Number of OMPTHREADS to use in ranking workers.
   C.NITERMAX              = 100; %Number of iterations to run ranking algorithm
   C.MCutOff               = 3; %Mi >= C.MCutOff is not used for min wage, but used for acc prob

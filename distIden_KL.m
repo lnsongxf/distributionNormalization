@@ -68,7 +68,7 @@ for iProd = 1:3
     fDist2   = firmDist(fName2);
     indProd2 = getPeriodProd(numBins,workersPerBin,firmsPerBin,RPUse,wDist2,fDist2);
     addn     = ['Prod2_',num2str(iProd),'Dist',num2str(iDist)];
-    [wTrueRank,wEstRank2,wTrueBin2,wEstBin2,fTrueRank2,fEstRank2,fTrueBin2,fEstBin2] = getNLSInputs(indProd2,wAdoptionNum,addn,fAdoptionNum,numBins);
+    [wTrueRank2,wEstRank2,wTrueBin2,wEstBin2,fTrueRank2,fEstRank2,fTrueBin2,fEstBin2] = getNLSInputs(indProd2,wAdoptionNum,addn,fAdoptionNum,numBins);
     save(['.',filesep,'Output',filesep,addn,'.mat'],'wName2','wTrueRank2','wEstRank2','wTrueBin2','wEstBin2','fTrueRank2','fEstRank2','fTrueBin2','fEstBin2')
     %See how well we do on the CDF for now
     results{iProd,iDist} = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
@@ -76,7 +76,7 @@ for iProd = 1:3
       fEstRank1,fTrueBin2,wEstRank1,wTrueBin2,...
       fEstRank2,fTrueRank1,wEstRank2,wTrueRank1,...
       fName1,fTrueRank2,wName1,wTrueRank2,...
-      numworkers,numfirms,numBins);
+      wAdoptionNum,fAdoptionNum,numBins,dCUse(1),dCUse(2));
   end
 end
 

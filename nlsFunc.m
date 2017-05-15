@@ -3,7 +3,9 @@ function results = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
     fEstRank1,fTrueBin2,wEstRank1,wTrueBin2,...
     fEstRank2,fTrueRank1,wEstRank2,wTrueRank1,...
     fName1,fTrueRank2,wName1,wTrueRank2,...
-    numworkers,numfirms,numBins)
+    numworkers,numfirms,numBins,beta1,beta2)
+  
+  
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Set Parameters
@@ -18,15 +20,15 @@ function results = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
         % Setup Data
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         xseq         = linspace(0,1,200);
-        
+        true_cdf     = betacdf(xseq,beta1,beta2);
         % Take overlapping workers/firms
         [~,IA,IB] = intersect(wName1,wName2);
         [~,JA,JB] = intersect(fName1,fName2);
         
         % Convert to percentiles
-        if wf==1
-          if rb==1
-            if te==1
+        if strcmp(wf(1),'work')
+          if strcmp(rb(1),'rank')
+            if strcmp(te(1),'true')
               datay = (wTrueRank1(IA))/numworkers;
               datax = (wTrueRank2(IB))/numworkers;
             else
@@ -34,7 +36,7 @@ function results = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
               datax = (wEstRank2(IB))/numworkers;
             end
           else
-            if te==1
+            if strcmp(te(1),'true')
               datay = (wTrueBin1(IA))/numBins;
               datax = (wTrueBin2(IB))/numBins;
             else
@@ -43,8 +45,8 @@ function results = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
             end
           end
         else
-          if rb==1
-            if te==1
+          if strcmp(rb(1),'rank')
+            if strcmp(te(1),'true')
               datay = (fTrueRank1(JA))/numfirms;
               datax = (fTrueRank2(JB))/numfirms;
             else
@@ -52,7 +54,7 @@ function results = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
               datax = (fEstRank2(JB))/numfirms;
             end
           else
-            if te==1
+            if strcmp(te(1),'true')
               datay = (fTrueBin1(JA))/numBins;
               datax = (fTrueBin2(JB))/numBins;
             else
@@ -96,7 +98,7 @@ function results = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Save results
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        spec = [wf,'_',te,'_',rb];
+        spec = [wf{1},'_',te{1},'_',rb{1}];
         results.(spec).h    = h;
         results.(spec).pval = pval;
         
