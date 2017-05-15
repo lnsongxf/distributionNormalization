@@ -1,4 +1,4 @@
-function [wTrueRank,wEstRank,wTrueBin,wEstBin,fTrueRank,fEstRank,fTrueBin,fEstBin] = getNLSInputs(indProd,wAdoptionNum,addn)
+function [wTrueRank,wEstRank,wTrueBin,wEstBin,fTrueRank,fEstRank,fTrueBin,fEstBin] = getNLSInputs(indProd,wAdoptionNum,addn,fAdoptionNum,numBins)
   [~,~,~,~,~,RD,SimO] = KL('customProd',indProd,wAdoptionNum,addn);
   wTrueRank    = RD.I.iNRRankAgg(:,1);
   wEstRank     = RD.I.iNRRankAgg(:,2);
