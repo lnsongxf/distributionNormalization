@@ -57,7 +57,7 @@ for iProd = 1:3
   %Obtain the numbers of interest.
   [wTrueRank1,wEstRank1,wTrueBin1,wEstBin1,fTrueRank1,fEstRank1,fTrueBin1,fEstBin1] = getNLSInputs(indProd1,wAdoptionNum,addn,fAdoptionNum,numBins);
   %Save for later
-  save([filesep,'Output',filesep,addn,'.mat'],wName1,wTrueRank1,wEstRank1,wTrueBin1,wEstBin1,fTrueRank1,fEstRank1,fTrueBin1,fEstBin1)
+  save(['.',filesep,'Output',filesep,addn,'.mat'],'wName1','wTrueRank1','wEstRank1','wTrueBin1','wEstBin1','fTrueRank1','fEstRank1','fTrueBin1','fEstBin1')
   for iDist = 1:3
     %Workers and firms involved in Period 2
     %Same setup as period 1.
@@ -68,7 +68,7 @@ for iProd = 1:3
     indProd2 = getPeriodProd(numBins,workersPerBin,firmsPerBin,RPUse,wDist2,fDist2);
     addn     = ['Prod2_',num2str(iProd),'Dist',num2str(iDist)];
     [wTrueRank,wEstRank2,wTrueBin2,wEstBin2,fTrueRank2,fEstRank2,fTrueBin2,fEstBin2] = getNLSInputs(indProd2,wAdoptionNum,addn,fAdoptionNum,numBins);
-    save([filesep,Output,filesep,addn,'.mat'],wName1,wTrueRank2,wEstRank2,wTrueBin2,wEstBin2,fTrueRank2,fEstRank2,fTrueBin2,fEstBin2)
+    save(['.',filesep,'Output',filesep,addn,'.mat'],'wName2','wTrueRank2','wEstRank2','wTrueBin2','wEstBin2','fTrueRank2','fEstRank2','fTrueBin2','fEstBin2')
     %See how well we do on the CDF for now
     results{iProd,iDist} = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
       fEstBin2,fTrueBin1,wEstBin2,wTrueBin1,...
