@@ -59,10 +59,11 @@ for iProd = 1:3
   %Save for later
   save(['.',filesep,'Output',filesep,addn,'.mat'],'wName1','wTrueRank1','wEstRank1','wTrueBin1','wEstBin1','fTrueRank1','fEstRank1','fTrueBin1','fEstBin1')
   for iDist = 1:3
+    dCUse = distCenter2{iDist};
     %Workers and firms involved in Period 2
     %Same setup as period 1.
-    wName2   = sort(datasample(vec(1:nx),wAdoptionNum,'Replace',false,'Weights',betapdf(linspace(0,1,nx),distCenter2(1),distCenter2(2))));
-    fName2   = sort(datasample(vec(1:ny),fAdoptionNum,'Replace',false,'Weights',betapdf(linspace(0,1,ny),distCenter2(1),distCenter2(2))));
+    wName2   = sort(datasample(vec(1:nx),wAdoptionNum,'Replace',false,'Weights',betapdf(linspace(0,1,nx),dCUse(1),dCUse(2))));
+    fName2   = sort(datasample(vec(1:ny),fAdoptionNum,'Replace',false,'Weights',betapdf(linspace(0,1,ny),dCUse(1),dCUse(2))));
     wDist2   = workerDist(wName2);
     fDist2   = firmDist(fName2);
     indProd2 = getPeriodProd(numBins,workersPerBin,firmsPerBin,RPUse,wDist2,fDist2);
