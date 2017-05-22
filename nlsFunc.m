@@ -99,8 +99,9 @@ function results = nlsFunc(fEstBin1,fName2,wEstBin1,wName2,...
         % Save results
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         spec = [wf{1},'_',te{1},'_',rb{1}];
-        results.(spec).h    = h;
-        results.(spec).pval = pval;
+        results.(spec).h      = h;
+        results.(spec).pval   = pval;
+        results.(spec).params = xunc;
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Screen display

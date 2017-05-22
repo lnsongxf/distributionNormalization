@@ -105,7 +105,7 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
       C.GridZeta              = 0;     %Match Quality Shock Grid
       C.UseVacs               = 0;     %Use vacancy information
       V.VarDueNoise           = 0.1;   %Wage variance due to measurement error.
-      C.DropExt               = 0.1;   %Cutoff for dropping algorithm
+      C.DropExt               = 0.01;   %Cutoff for dropping algorithm
     otherwise
       error('Scheme is not defined')
   end
