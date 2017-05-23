@@ -1,6 +1,6 @@
-function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)  
+function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
   %% HOUSEKEEPING
-  format short; 
+  format short;
   
   %% SETUP
   S.Scheme                = Scheme; %Name this specification.
@@ -34,6 +34,20 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
   V.DistY                 = [1];          %1 uniform, 2 normal, 3 bimodal. Refer to paper.
   V.Pf                    = 1;                %Relative size of firms to workers.
   V.ProdFn.customProd     = @(x,y) customProd(x,y);
+  
+  %More computation parameters
+  C.LenGrid               = 50;   %Number of grid points to discretize productivity.
+  C.Nodes                 = 3000; %Number of nodes for the LAP problem.
+  C.Std2Truncate          = 3;    %Standard deviations to truncate from noise.
+  C.TolExit               = 5e-6;  %Exit tolerance.
+  C.OMPTHREADS            = 1; %Number of OMPTHREADS to use in ranking workers.
+  C.NITERMAX              = 100; %Number of iterations to run ranking algorithm
+  C.MCutOff               = 3; %Mi >= C.MCutOff is not used for min wage, but used for acc prob
+  C.DistMaxInGlo          = 10000; %Initial width of worker ranking.
+  C.ProbDistInc           = 0.9; %Prob of increasing distance in rankAlgo
+  C.MovesToSave           = 0; %How many moves to save NRAgg. 0 means never.
+  C.DispCheck             = 10000; %How many checks before display
+  C.DispMove              = 10000; %How many moves before display
   
   switch S.Scheme
     case {'benchmark'}
@@ -97,10 +111,10 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
       V.VarDueNoise           = 0.2;   %Wage variance due to measurement error.
       C.DropExt               = 0.1;   %Cutoff for dropping algorithm
     case {'customProd'}
-      C.NumAgentsSimMult      = econSize/50;   %Number of agents per type for simulation.
+      C.NumAgentsSimMult      = econSize/C.LenGrid;   %Number of agents per type for simulation.
       C.Years                 = 20;    %Years in simulation.
       C.jSizeDist             = 100;   %Total number of vacancies for each firm.
-      V.Pphi                  = 0.2;   %OJS parameter
+      V.Pphi                  = [0.2;0.04];   %OJS parameter
       V.Bbeta                 = 0.996; %Time discount factor.
       C.GridZeta              = 0;     %Match Quality Shock Grid
       C.UseVacs               = 0;     %Use vacancy information
@@ -109,20 +123,6 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
     otherwise
       error('Scheme is not defined')
   end
-  
-  %More computation parameters
-  C.LenGrid               = 50;   %Number of grid points to discretize productivity.
-  C.Nodes                 = 3000; %Number of nodes for the LAP problem.
-  C.Std2Truncate          = 3;    %Standard deviations to truncate from noise.
-  C.TolExit               = 5e-6;  %Exit tolerance.
-  C.OMPTHREADS            = 1; %Number of OMPTHREADS to use in ranking workers.
-  C.NITERMAX              = 100; %Number of iterations to run ranking algorithm
-  C.MCutOff               = 3; %Mi >= C.MCutOff is not used for min wage, but used for acc prob
-  C.DistMaxInGlo          = C.NumAgentsSimMult.*C.LenGrid*0.9; %Initial width of worker ranking.
-  C.ProbDistInc           = 0.9; %Prob of increasing distance in rankAlgo
-  C.MovesToSave           = 0; %How many moves to save NRAgg. 0 means never.
-  C.DispCheck             = 10000; %How many checks before display
-  C.DispMove              = 10000; %How many moves before display
   
   %% AUTOMATED, USER SHOULD IGNORE
   % Compute the model and run simulation if needed
