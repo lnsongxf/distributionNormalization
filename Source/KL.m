@@ -36,7 +36,7 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
   V.ProdFn.customProd     = @(x,y) customProd(x,y);
   
   %More computation parameters
-  C.LenGrid               = 50;   %Number of grid points to discretize productivity.
+  C.LenGrid               = 100;   %Number of grid points to discretize productivity.
   C.Nodes                 = 3000; %Number of nodes for the LAP problem.
   C.Std2Truncate          = 3;    %Standard deviations to truncate from noise.
   C.TolExit               = 5e-6;  %Exit tolerance.
