@@ -36,7 +36,7 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
   V.ProdFn.customProd     = @(x,y) customProd(x,y);
   
   %More computation parameters
-  C.LenGrid               = 100;   %Number of grid points to discretize productivity.
+  C.LenGrid               = 50;   %Number of grid points to discretize productivity.
   C.Nodes                 = 3000; %Number of nodes for the LAP problem.
   C.Std2Truncate          = 3;    %Standard deviations to truncate from noise.
   C.TolExit               = 5e-6;  %Exit tolerance.
@@ -114,7 +114,7 @@ function [S,C,P,M,Sim,RD,SimO] = KL(Scheme,customProd,econSize,addn,iSet)
       C.NumAgentsSimMult      = econSize/C.LenGrid;   %Number of agents per type for simulation.
       C.Years                 = 20;    %Years in simulation.
       C.jSizeDist             = 100;   %Total number of vacancies for each firm.
-      V.Pphi                  = [0.2;0.04];   %OJS parameter
+      V.Pphi                  = 0.2;   %OJS parameter
       V.Bbeta                 = 0.996; %Time discount factor.
       C.GridZeta              = 0;     %Match Quality Shock Grid
       C.UseVacs               = 0;     %Use vacancy information

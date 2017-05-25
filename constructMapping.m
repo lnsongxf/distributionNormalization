@@ -26,7 +26,3 @@ for iProd = 1:3
   end
 end
 save mapping.mat
-
-
-
-

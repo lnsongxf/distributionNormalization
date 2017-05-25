@@ -19,7 +19,7 @@ function [P] = AssignParameters(C,V,S,iout,iprod)
       error('Invalid Production Function')
   end
   
-  P.FName = strcat([S.Scheme,'_',ProdFnName,'_',num2str(iout,'%06i\n'),'_',datestr(clock,'yymmddHHMMSS')]);
+  P.FName = strcat([S.Scheme,'_',num2str(iout,'%03i\n'),'_',datestr(clock,'yyyymmddHHMM'),'_']);
   P.ProdFn = V.ProdFn.(ProdFnName);
   
   %Record the iteration

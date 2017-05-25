@@ -15,7 +15,7 @@ wAdoptionNum    = 30000;
 %Likewise the number of firms.
 fAdoptionNum    = wAdoptionNum/firmSize;
 %For calculating the production function, we need to use bins.
-numBins         = 100;
+numBins         = 50;
 workersPerBin   = wAdoptionNum/numBins;
 firmsPerBin     = fAdoptionNum/numBins;
 
@@ -29,7 +29,7 @@ firmDist   = sort(rand(ny,1));
 %Consider RP (Real Production) defined on RX and RY
 RP{1} = @(x,y) 0.6 + 0.4* (x^0.5 + y^0.5)^(2);
 RP{2} = @(x,y) (x^2 + 2*y^2)^(1/2);
-RP{3} = @(x,y) (0.4 + (x-0.4+1)*y).*double(x<=0.4) + (0.4+((x-0.4)^2+y^2)^(1/2)).*double(x>0.4);
+RP{3} = @(x,y) (0.1 + (x-0.1+1)*y).*double(x<=0.1) + (0.1+((x-0.1)^2+y^2)^(1/2)).*double(x>0.1);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

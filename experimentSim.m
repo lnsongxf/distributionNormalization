@@ -58,13 +58,13 @@ for iProd = 1:3
                 indProd1  = ndnanfilter(indProd1,@rectwin,[2,2]);
                 indProd1(isnan(indProd1)) = 0;
                 %Compute what happens if you use the second period production
-                bla = ['P2Prod_t1','P',num2str(iProd),'S',num2str(iSet),'t2',num2str(iProd2),'D',num2str(iDist2),'S',num2str(iSet)];
+                bla = ['P2Prod_t1','P',num2str(iProd),'S',num2str(iSet),'t2P',num2str(iProd2),'D',num2str(iDist2),'S',num2str(iSet)];
                 try
                   getNLSInputs(indProd1,wAdoptionNum,bla,fAdoptionNum,numBins,iSet);
                 end
               else
                 %What if use second period distribution?
-                bla = ['P2Dist_t1','P',num2str(iProd),'S',num2str(iSet),'t2',num2str(iProd2),'D',num2str(iDist2),'S',num2str(iSet)];
+                bla = ['P2Dist_t1','P',num2str(iProd),'S',num2str(iSet),'t2P',num2str(iProd2),'D',num2str(iDist2),'S',num2str(iSet)];
                 idxgood   =~ isnan(P1Prod);
                 indProd2  = griddata(qF(idxgood),qW(idxgood),P1Prod(idxgood),meshF,meshW);
                 indProd2  = ndnanfilter(indProd2,@rectwin,[2,2]);
