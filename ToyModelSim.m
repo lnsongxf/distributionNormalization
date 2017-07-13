@@ -1,110 +1,131 @@
-%This model
+function ToyModelSim()
+  clear
+  close all
+  TrueParam1.Beta1              = 1.7;
+  TrueParam1.Beta2              = 1.3;
+  TrueParam1.ProdParam          = 0.4;
+  TrueParam2.Beta1              = 1.3;
+  TrueParam2.Beta2              = 1.7;
+  TrueParam2.ProdParam          = 0.6;
+  numWorkers                    = 100000;
+  numGrid                       = 1000;
+  measurementError              = 0.1;
+  simRounds                     = 10;
+  
+  %Construct the "true" data
+  %Name is worker id
+  %Skill is the worker's skill in a quantifiable sense (eg:, IQ, schooling)
+  %Rank is just an ordinal (eg: 2nd, 50th percentile)
+  TrueDist                      = dataset(vec(1:numWorkers),sort(rand(numWorkers,1)));
+  [~,~,TrueDist.Var3]           = unique(TrueDist.Var2,'sorted');
+  TrueDist.Properties.VarNames  = {'Name','Skill','Rank0'};
+  
+  %We now select some workers to Period 1 and some workers to Period 2 so that
+  %the distribution is Beta with different parameters
+  Dist1       = getDist(TrueDist,TrueParam1);
+  Dist2       = getDist(TrueDist,TrueParam2);
+  
+  disp('Verify that the distribution is indeed Beta')
+  disp('True Period 1:')
+  disp([TrueParam1.Beta1,TrueParam1.Beta2])
+  disp('Estimated Period 1:')
+  disp(betafit(Dist1.Skill,0.01))
+  disp('True Period 2:')
+  disp([TrueParam2.Beta1,TrueParam2.Beta2]);
+  disp('Estimated Period 2:')
+  disp(betafit(Dist2.Skill,0.01))
+  
+  %Construct production functions defined on cardinal skill
+  ProdFn1                       = @(x) x.^TrueParam1.ProdParam;
+  ProdFn2                       = @(x) x.^TrueParam2.ProdParam;
+  
+  %Wages are simply production plus some normal random error in logs.
+  Dist1.Wage                    = exp(log(ProdFn1(Dist1.Skill)) + measurementError*randn(size(Dist1.Skill)));
+  Dist2.Wage                    = exp(log(ProdFn2(Dist2.Skill)) + measurementError*randn(size(Dist2.Skill)));
+  
+  %In this model, wages rank workers, so we construct the ranking on [0,1]
+  [~,~,Dist1.Rank]              = unique(Dist1.Wage,'sorted');
+  Dist1.Rank                    = Dist1.Rank./max(Dist1.Rank);
+  [~,~,Dist2.Rank]              = unique(Dist2.Wage,'sorted');
+  Dist2.Rank                    = Dist2.Rank./max(Dist2.Rank);
+  
+  %Construct the 4 moments which we want to decompose.
+  m1_TRUE                       = getMoments(Dist1.Wage);
+  m2_TRUE                       = getMoments(Dist2.Wage);
+  
+  %The true counterfactuals are simply evaluating Prod2 using Skill1, and
+  %Prod1 using Skill2.
+  m2UsingProd1_TRUE                 = getMoments(ProdFn1(Dist2.Skill));
+  m2UsingDist1_TRUE                 = getMoments(ProdFn2(Dist1.Skill));
+  
+  %Construct the minimization problem which is basically a rescaling of the
+  %domain in Period 2 so that it is comparable to the domain in Period 1.
+  %In otherwise, we are making the ranking of a worker in Period 2 as close
+  %as possible to his ranking in Period 1.
+  %This domain normalization will be used in both parametric and
+  %non-parametric approaches.
+  OverLap                = intersect(Dist1.Name,Dist2.Name); %Identification relies on overlapping workers.
+  F                      = @(x,xdata) kumaraswamyiCDF(xdata,x(1),x(2));
+  Fsumsquares            = @(x) sum((F(x,Dist2.Rank(ismember(Dist2.Name,OverLap))) - Dist1.Rank(ismember(Dist1.Name,OverLap))).^2);
+  xunc                   = fminunc(Fsumsquares,[0.5,0.5]);
+  
+  %Nonparametric Approach
+  %Estimate the production function nonparametrically in both periods.
+  %This is simply a simple average of workers at every permille.
+  nonParProd1            = getNonParProd(Dist1,numGrid);
+  nonParProd2            = getNonParProd(Dist2,numGrid);
+  
+  % Alter domains of production function in period 2 and distribution.
+  DomainProd1            = linspace(0,1,numel(nonParProd1));
+  DomainProd2            = linspace(0,1,numel(nonParProd2));
+  DomainProd2            = kumaraswamyiCDF(DomainProd2,xunc(1),xunc(2));
+  Dist2.RankNorm         = kumaraswamyiCDF(Dist2.Rank,xunc(1),xunc(2));
+  
+  m2UsingProd1_NonP      = getMoments(interp1(DomainProd1,nonParProd1,Dist2.RankNorm));
+  m2UsingDist1_NonP      = getMoments(interp1(DomainProd2,nonParProd2,Dist1.Rank));
+  %Parametric Approach
+  %We start the estimation at the TRUE value
+  simMoments             = @(X) simulateWages(X,simRounds,numWorkers);
+  paramEst1              = fminunc(@(X) sum((simMoments(X) - m1_TRUE).^2),[TrueParam1.Beta1,TrueParam1.Beta2,TrueParam1.ProdParam]);
+  paramEst2              = fminunc(@(X) sum((simMoments(X) - m2_TRUE).^2),[TrueParam2.Beta1,TrueParam2.Beta2,TrueParam2.ProdParam]);
+  
+  m2UsingProd1_Par       = getMoments(betarnd(paramEst2(1),paramEst2(2),numWorkers,1).^paramEst1(3));
+  m2UsingDist1_Par       = getMoments(betarnd(paramEst1(1),paramEst1(2),numWorkers,1).^paramEst2(3));
+  
+  %Parametric Approach, with Ranking as additional constraints
+  %Start from the results of the parametric estimation, and simply alter the
+  %domain of Period 2 distribution and production function to match Period 1
+  %Covert the parametric estimation into estimation on percentiles
+  for i1 = 1:100
+    Idx                    = DomainProd1>((i1-1)*0.01) & DomainProd1<=(i1*0.01);
+    Domain                 = DomainProd1(Idx);
+    Prods                  = betainv(Domain,paramEst1(1),paramEst1(2));
+    ParProd1(Idx,1)        = mean(Prods.^paramEst1(3));
+    Prods                  = betainv(Domain,paramEst2(1),paramEst2(2));
+    ParProd2(Idx,1)        = mean(Prods.^paramEst2(3));
+  end
+  m2UsingProd1_ParR      = getMoments(interp1(DomainProd1,ParProd1,Dist2.RankNorm));
+  m2UsingDist1_ParR      = getMoments(interp1(DomainProd2,ParProd2,Dist1.Rank));
+  
+  disp('Moments from raw data.')
+  m1_TRUE
+  m2_TRUE
+  disp('Decompositions with true parameters.')
+  disp(sprintf('True              & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',             m2UsingProd1_TRUE(1),m2UsingProd1_TRUE(2),m2UsingProd1_TRUE(3),m2UsingProd1_TRUE(4)));
+  disp(sprintf('NonParametric     & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',    m2UsingProd1_NonP(1),m2UsingProd1_NonP(2),m2UsingProd1_NonP(3),m2UsingProd1_NonP(4)));
+  disp(sprintf('Parametric        & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',       m2UsingProd1_Par(1),m2UsingProd1_Par(2),m2UsingProd1_Par(3),m2UsingProd1_Par(4)));
+  disp(sprintf('Parametric + Rank & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',m2UsingProd1_ParR(1),m2UsingProd1_ParR(2),m2UsingProd1_ParR(3),m2UsingProd1_ParR(4)));
+  disp(sprintf('True              & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',             m2UsingDist1_TRUE(1),m2UsingDist1_TRUE(2),m2UsingDist1_TRUE(3),m2UsingDist1_TRUE(4)));
+  disp(sprintf('NonParametric     & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',    m2UsingDist1_NonP(1),m2UsingDist1_NonP(2),m2UsingDist1_NonP(3),m2UsingDist1_NonP(4)));
+  disp(sprintf('Parametric        & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',       m2UsingDist1_Par(1),m2UsingDist1_Par(2),m2UsingDist1_Par(3),m2UsingDist1_Par(4)));
+  disp(sprintf('Parametric + Rank & %7.4f & %7.4f & %7.4f & %7.4f \\\\ ',m2UsingDist1_ParR(1),m2UsingDist1_ParR(2),m2UsingDist1_ParR(3),m2UsingDist1_ParR(4)));
+  
+end
 
-clear 
-close all
-TrueParam1                    = [1.7,1.3,0.4];
-TrueParam2                    = [1.3,1.7,0.6];
-TrueDist                      = dataset(vec(1:100000),sort(rand(100000,1)));
-[~,~,TrueDist.Var3]           = unique(TrueDist.Var2,'sorted');
-TrueDist.Properties.VarNames  = {'Name','Skill','Rank0'};
-P1Sampling                    = betapdf(TrueDist.Skill,TrueParam1(1),TrueParam1(2));
-P1Sampling                    = P1Sampling./max(P1Sampling);
-Dist1                         = TrueDist(rand(100000,1)<=P1Sampling,:);
-P1Sampling                    = betapdf(TrueDist.Skill,TrueParam2(1),TrueParam2(2));
-P1Sampling                    = P1Sampling./max(P1Sampling);
-Dist2                         = TrueDist(rand(100000,1)<=P1Sampling,:);
-ProdFn1                       = @(x) x.^TrueParam1(3);
-ProdFn2                       = @(x) x.^TrueParam2(3);
-Dist1.Wage                    = ProdFn1(Dist1.Skill);
-Dist2.Wage                    = ProdFn2(Dist2.Skill);
-[~,~,Dist1.Rank1]             = unique(Dist1.Skill,'sorted');
-[~,~,Dist2.Rank2]             = unique(Dist2.Skill,'sorted');
-m1_TRUE                       = getMoments(Dist1.Wage);
-m2_TRUE                       = getMoments(Dist2.Wage);
+function Dist  = getDist(TrueDist,TrueParam1)
+  %Sample from the TrueDist(Uniform) so that we get Beta distribution
+  P1Sampling   = betapdf(TrueDist.Skill,TrueParam1.Beta1,TrueParam1.Beta2);
+  P1Sampling   = P1Sampling./max(P1Sampling);
+  Dist        = TrueDist(rand(size(TrueDist.Name))<=P1Sampling,:);
+end
 
-%Confirm that the distributions in the first and second half of the data is
-%the Beta distributions used above.
-[PHAT1, ~]                   = betafit(Dist1.Skill,0.05);
-[PHAT2, ~]                   = betafit(Dist2.Skill,0.05);
-PHAT1
-TrueParam1
-PHAT2
-TrueParam2
-
-%TRUE Decompositions.
-m2UsingProd1_TRUE                 = getMoments(ProdFn1(Dist2.Skill));
-m2UsingDist1_TRUE                 = getMoments(ProdFn2(Dist1.Skill));
-
-
-%Nonparametric Approach
-%Know that wages rank workers, and from there, simply construct production
-%function on percentiles of workers. Consider the changes after normalizing
-%based on ranks
-%Estimate the production function nonparametrically in both periods.
-nonParProd1            = getNonParProd(Dist1);
-nonParProd2            = getNonParProd(Dist2);
-
-%Estimate the inversion
-%Obtain the rankings of workers in each half by wages
-[~,~,Dist1.WageRank1]  = unique(Dist1.Wage,'sorted');
-Dist1.WageRank1        = Dist1.WageRank1./max(Dist1.WageRank1);
-[~,~,Dist2.WageRank2]  = unique(Dist2.Wage,'sorted');
-Dist2.WageRank2        = Dist2.WageRank2./max(Dist2.WageRank2);
-%Use only the overlaps because identification comes from there.
-OverLap                = intersect(Dist1.Name,Dist2.Name);
-
-%Construct the minimization problem.
-F                      = @(x,xdata) kumaraswamyiCDF(xdata,x(1),x(2));
-Fsumsquares            = @(x) sum((F(x,Dist2.WageRank2(ismember(Dist2.Name,OverLap))) - Dist1.WageRank1(ismember(Dist1.Name,OverLap))).^2);
-% This is the inversion when applied to Overlapping W in period 2, yields
-% ranking that is comparable to period 1.
-xunc                   = fminunc(Fsumsquares,[0.5,0.5]);
-
-% Alter the domains of the production function in period 2 as well as the
-% distribution.
-DomainProd1            = linspace(0,1,numel(nonParProd1));
-DomainProd2            = linspace(0,1,numel(nonParProd2));
-DomainProd2            = kumaraswamyiCDF(DomainProd2,xunc(1),xunc(2)); 
-Dist2.WageRank2Norm    = kumaraswamyiCDF(Dist2.WageRank2,xunc(1),xunc(2)); 
-
-m2UsingProd1_NonP      = getMoments(interp1(DomainProd1,nonParProd1,Dist2.WageRank2Norm));
-m2UsingDist1_NonP      = getMoments(interp1(DomainProd2,nonParProd2,Dist1.WageRank1));
-
-%Parametric Approach, No Specification Bias
-%Econometrician correctly guesses that Wage function is Skill^Alpha
-%And guesses that distribution is Beta.
-%Wants to guess Beta distribution parameters and production function Alpha
-options                = optimset('fmincon');
-options.TolCon         = 1e-8;
-options.TolFun         = 1e-8;
-paramEst1              = fmincon(@(X) sum((simulateWages(X) - m1_TRUE).^2),TrueParam1,[],[],[],[],[0,0,0],[2,2,2],[],options);
-paramEst2              = fmincon(@(X) sum((simulateWages(X) - m2_TRUE).^2),TrueParam2,[],[],[],[],[0,0,0],[2,2,2],[],options);
-
-m2UsingProd1_Par       = getMoments(betarnd(paramEst2(1),paramEst2(2),100000,1).^paramEst1(3));
-m2UsingDist1_Par       = getMoments(betarnd(paramEst1(1),paramEst1(2),100000,1).^paramEst2(3));
-
-%Parametric Approach, Specification Bias in Production
-%Econometrician correctly guesses that Wage function is Skill^Alpha
-%And guesses that distribution is Beta.
-%Wants to guess Beta distribution parameters and production function Alpha
-paramEst1              = fmincon(@(X) sum((simulateWagesMisspec(X) - m1_TRUE).^2),TrueParam1,[],[],[],[],[0,0,0],[2,2,2],[],options);
-paramEst2              = fmincon(@(X) sum((simulateWagesMisspec(X) - m2_TRUE).^2),TrueParam2,[],[],[],[],[0,0,0],[2,2,2],[],options);
-m2UsingProd1_ParMS     = getMoments(betarnd(paramEst2(1),paramEst2(2),100000,1).^paramEst1(3));
-m2UsingDist1_ParMS     = getMoments(betarnd(paramEst1(1),paramEst1(2),100000,1).^paramEst2(3));
-
-
-disp('Moments from raw data.')
-m1_TRUE
-m2_TRUE
-disp('Decompositions with true parameters.')
-m2UsingProd1_TRUE                 = getMoments(ProdFn1(Dist2.Skill))
-m2UsingDist1_TRUE                 = getMoments(ProdFn2(Dist1.Skill))
-disp('Decompositions if we used the correct nonparametric normalization.')
-m2UsingProd1_NonP      = getMoments(interp1(DomainProd1,nonParProd1,Dist2.WageRank2Norm))
-m2UsingDist1_NonP      = getMoments(interp1(DomainProd2,nonParProd2,Dist1.WageRank1))
-disp('Decompositions with correct parametric form.')
-m2UsingProd1_Par       = getMoments(betarnd(paramEst2(1),paramEst2(2),100000,1).^paramEst1(3))
-m2UsingDist1_Par       = getMoments(betarnd(paramEst1(1),paramEst1(2),100000,1).^paramEst2(3))
-disp('Decompositions with incorrect parametric form.')
-m2UsingProd1_ParMS     = getMoments(betarnd(paramEst2(1),paramEst2(2),100000,1).^paramEst1(3))
-m2UsingDist1_ParMS     = getMoments(betarnd(paramEst1(1),paramEst1(2),100000,1).^paramEst2(3))
